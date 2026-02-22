@@ -12,8 +12,16 @@ public class InMemoryTaskRepository implements TaskRepository {
 
     @Override
     public void save(Task task) {
-        tasks.add(task);
-        System.out.println("Tarea guardada: " + task.getTitle());
+        Task existingTask = findById(task.getId());
+        if (existingTask != null) {
+            // Lógica para actualizar: reemplazamos la anterior
+            int index = tasks.indexOf(existingTask);
+            tasks.set(index, task);
+            System.out.println("Tarea actualizada: " + task.getTitle());
+        } else {
+            tasks.add(task);
+            System.out.println("Tarea creada: " + task.getTitle());
+        }
     }
 
     @Override

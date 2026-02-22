@@ -1,52 +1,33 @@
-
 import model.Task;
 import repository.TaskRepository;
 import repository.impl.InMemoryTaskRepository;
-
+import service.TaskService;
 import java.time.LocalDate;
-import java.util.Scanner;
 
 public class Main {
     public static void main(String[] args) {
+        // 1. Inicializamos las capas (Inyección de dependencias)
         TaskRepository repository = new InMemoryTaskRepository();
-        Scanner scanner = new Scanner(System.in);
-        int option = 0;
+        TaskService service = new TaskService(repository);
 
-        System.out.println("--- BIENVENIDO A TU TASK MANAGER ---");
+        System.out.println("=== Iniciando Prueba del Motor TaskManager ===\n");
 
-        while (option != 3) {
-            System.out.println("\n1. Agregar Tarea");
-            System.out.println("2. Listar Tareas");
-            System.out.println("3. Salir");
-            System.out.print("Elige una opción: ");
+        // 2. Probamos la creación de tareas
+        service.createTask("Estudiar Algoritmos", "Repasar Big O Notation", LocalDate.now().plusDays(2));
+        service.createTask("Gym", "Entrenamiento de fuerza", LocalDate.now());
 
-            option = scanner.nextInt();
-            scanner.nextLine();
+        // 3. Listamos las tareas actuales
+        System.out.println("\n--- Lista de Tareas ---");
+        service.getTasksOrderedByDate().forEach(System.out::println);
 
-            if (option == 1) {
-                System.out.print("Título de la tarea: ");
-                String title = scanner.nextLine();
+        // 4. Probamos la lógica de completar una tarea
+        System.out.println("\nCompletando la tarea ID 1...");
+        service.markTaskAsCompleted(1);
 
-                System.out.print("Descripción: ");
-                String description = scanner.nextLine();
+        // 5. Verificamos que los filtros funcionen
+        System.out.println("\n--- Tareas Pendientes ---");
+        service.getPendingTasks().forEach(System.out::println);
 
-                int id = repository.findAll().size() + 1;
-
-                Task newTask = new Task(id, title, description, LocalDate.now());
-                repository.save(newTask);
-
-            } else if (option == 2) {
-                System.out.println("\n--- TUS TAREAS ---");
-                if (repository.findAll().isEmpty()) {
-                    System.out.println("No hay tareas pendientes.");
-                } else {
-                    for (Task t : repository.findAll()) {
-                        System.out.println(t);
-                    }
-                }
-            }
-        }
-        System.out.println("¡Suerte con el estudio! Cerrando programa...");
-        scanner.close();
+        System.out.println("\n=== Prueba Finalizada con Éxito ===");
     }
 }

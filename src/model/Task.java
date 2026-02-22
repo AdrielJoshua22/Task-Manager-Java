@@ -30,6 +30,8 @@ public class Task {
     public void setDescription(String description) {this.description = description;}
     public boolean isCompleted() {return completed;}
     public void setDueDate(LocalDate dueDate) {this.dueDate = dueDate;}
+    public void setCompleted(boolean completed) {this.completed = completed;}
+    public LocalDate getDueDate() {return dueDate;}
 
     @Override
     public String toString() {
