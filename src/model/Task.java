@@ -1,26 +1,40 @@
 package model;
+import java.time.LocalDate;
 
 public class Task {
-    private String title ;
-    private int priority;
 
-    public Task (String title, int priority){
-            if(priority <1|| priority >5 ){
-            throw new IllegalArgumentException("La Prioridad de tarea debe estar en un rango de 1 a 5 ");
-            }
+    //DEFINO LA ESTRUCTURA.
+
+    private int id;
+    private String title ;
+    private String description;
+    private boolean completed;
+    private LocalDate dueDate;
+
+    // CONSTRUCTOR.
+
+    public Task (int id, String title, String description, LocalDate dueDate){
             if(title == null || title.trim().isEmpty()){
             throw new IllegalArgumentException("El Titulo no puede estar vacio");
             }
+            this.id = id;
             this.title = title;
-            this.priority = priority;
+            this.description = description;
+            this.completed = completed;
+            this.dueDate = dueDate;
+
         }
 
-        public String getTitle(){return title;}
-        public int getPriority(){return priority;}
+    public int getId() {return id;}
+    public String getTitle() {return title;}
+    public void setDescription(String description) {this.description = description;}
+    public boolean isCompleted() {return completed;}
+    public void setDueDate(LocalDate dueDate) {this.dueDate = dueDate;}
 
     @Override
-    public String toString(){
-        return  "Tarea:  " +title+ " | Prioridad: " + priority;
+    public String toString() {
+        String status = completed ? "[X]" : "[ ]";
+        return id + ". " + status + " " + title + " (Vence: " + dueDate + ")";
     }
 
     }
