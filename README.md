@@ -25,7 +25,7 @@ Cómo ejecutarlo
 Clona el repositorio:
 
 Bash
-git clone https://github.com/TU_USUARIO/task-manager-java.git
+git clone https://github.com/adrieljoshua22/task-manager-java.git
 Abre el proyecto en tu IDE favorito (IntelliJ IDEA recomendado).
 
 Ejecuta la clase Main.java.
