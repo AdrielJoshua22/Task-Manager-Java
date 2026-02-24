@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<BorderPane xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
+            fx:controller="ui.TaskController"
+            prefHeight="600.0" prefWidth="900.0"
+            style="-fx-background-color: #1e1e1e;">
+
+    <left>
+        <VBox spacing="15" prefWidth="220" style="-fx-background-color: #252525; -fx-padding: 20;">
+            <Label text="TASK MANAGER" style="-fx-text-fill: #3498db; -fx-font-size: 18px; -fx-font-weight: bold;"/>
+            <Separator opacity="0.1"/>
+
+            <Button text="📂 Todas las tareas" onAction="#showAllTasks" maxWidth="Infinity" style="-fx-background-color: transparent; -fx-text-fill: white;"/>
+            <Button text="⏳ Pendientes" onAction="#showPendingTasks" maxWidth="Infinity" style="-fx-background-color: transparent; -fx-text-fill: white;"/>
+            <Button text="✅ Completadas" onAction="#showCompletedTasks" maxWidth="Infinity" style="-fx-background-color: transparent; -fx-text-fill: white;"/>
+        </VBox>
+    </left>
+
+    <center>
+        <VBox spacing="20" style="-fx-padding: 30;">
+            <HBox spacing="10" alignment="CENTER_LEFT">
+                <TextField fx:id="taskInputField" promptText="¿Qué hay que hacer hoy?" HBox.hgrow="ALWAYS" />
+
+                <DatePicker fx:id="datePicker" promptText="Vencimiento" prefWidth="150"
+                            style="-fx-control-inner-background: #333;"/>
+
+                <Button text="Añadir" onAction="#handleAddTask" />
+            </HBox>
+            <ListView fx:id="taskListView" VBox.vgrow="ALWAYS"
+                      style="-fx-background-color: #252525; -fx-control-inner-background: #252525; -fx-background-radius: 10;"/>
+        </VBox>
+    </center>
+</BorderPane>

@@ -1,6 +1,8 @@
 package ui;
 
 import javafx.application.Application;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.layout.StackPane;
@@ -9,17 +11,12 @@ import javafx.stage.Stage;
 public class App extends Application {
 
     @Override
-    public void start(Stage stage) {
-        // Por ahora, solo un mensaje de bienvenida con estilo
-        Label label = new Label("¡Bienvenido a tu Task Manager, Adriel!");
-        label.setStyle("-fx-font-size: 20px; -fx-text-fill: white;");
+    public void start(Stage stage) throws Exception {
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("main_view.fxml"));
+        Parent root = loader.load();
 
-        StackPane root = new StackPane(label);
-        root.setStyle("-fx-background-color: #2b2b2b;"); // Fondo oscuro tipo macOS
-
-        Scene scene = new Scene(root, 600, 400);
-
-        stage.setTitle("Task Manager Pro");
+        Scene scene = new Scene(root);
+        stage.setTitle("Task Manager Pro - AdrielJoshua");
         stage.setScene(scene);
         stage.show();
     }
