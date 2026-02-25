@@ -1,5 +1,6 @@
 package ui;
 
+import dao.TaskDAO;
 import javafx.fxml.FXML;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.ListCell;
@@ -11,11 +12,12 @@ import repository.impl.InMemoryTaskRepository;
 import java.time.LocalDate;
 
 public class TaskController {
+    TaskDAO gestor = new TaskDAO();
     @FXML private TextField taskInputField;
     @FXML private DatePicker datePicker;
     @FXML private ListView<Task> taskListView;
 
-    private final TaskService taskService = new TaskService(new InMemoryTaskRepository());
+    private final TaskService taskService = new TaskService();;
 
     @FXML
     public void initialize() {
@@ -64,7 +66,14 @@ public class TaskController {
         LocalDate date = datePicker.getValue();
 
         if (title != null && !title.trim().isEmpty()) {
+            // 1. Llamamos al servicio (que es void, no devuelve nada)
             taskService.createTask(title, "Sin descripción", date);
+
+            // 2. Para MySQL, como no tenemos el objeto que devuelve el service,
+            // creamos uno temporal para el gestor (puedes usar un ID provisorio como 0)
+            Task tareaParaMySQL = new Task(0, title, "Sin descripción", date);
+            gestor.guardarTarea(tareaParaMySQL);
+
             taskInputField.clear();
             datePicker.setValue(null);
             showAllTasks();
