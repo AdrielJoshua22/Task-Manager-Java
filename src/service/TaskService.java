@@ -17,8 +17,6 @@ public class TaskService {
     }
 
     public void createTask(String title, String description, LocalDate dueDate) {
-        // En una app real, el ID lo suele asignar MySQL (AUTO_INCREMENT)
-        // Por ahora enviamos 0 para que no falle tu constructor
         Task newTask = new Task(0, title, description, dueDate);
         taskDAO.guardarTarea(newTask);
     }
@@ -47,7 +45,6 @@ public class TaskService {
     }
 
     public void markTaskAsCompleted(int id) {
-        // Le pedimos al DAO que haga el UPDATE en la base de datos
         taskDAO.marcarComoCompletada(id);
     }
 }

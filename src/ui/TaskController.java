@@ -8,7 +8,6 @@ import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
 import model.Task;
 import service.TaskService;
-import repository.impl.InMemoryTaskRepository;
 import java.time.LocalDate;
 
 public class TaskController {
@@ -66,11 +65,7 @@ public class TaskController {
         LocalDate date = datePicker.getValue();
 
         if (title != null && !title.trim().isEmpty()) {
-            // 1. Llamamos al servicio (que es void, no devuelve nada)
             taskService.createTask(title, "Sin descripción", date);
-
-            // 2. Para MySQL, como no tenemos el objeto que devuelve el service,
-            // creamos uno temporal para el gestor (puedes usar un ID provisorio como 0)
             Task tareaParaMySQL = new Task(0, title, "Sin descripción", date);
             gestor.guardarTarea(tareaParaMySQL);
 

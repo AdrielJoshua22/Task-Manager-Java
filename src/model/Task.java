@@ -35,14 +35,9 @@ public class Task {
 
     @Override
     public String toString() {
-        // Definimos el texto del estado basado en el booleano 'completed'
         String estadoTexto = completed ? "COMPLETADA" : "PENDIENTE";
-
-        // Usamos el formateador para la fecha (asegúrate de tener el import de DateTimeFormatter)
         java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy");
         String dateText = (dueDate != null) ? dueDate.format(formatter) : "Sin fecha";
-
-        // Retornamos el formato con el texto descriptivo
         return id + ". [" + estadoTexto + "] " + title + " (Vence: " + dateText + ")";
     }
 
