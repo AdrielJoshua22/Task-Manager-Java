@@ -1,48 +1,65 @@
 package model;
+
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 public class Task {
 
-    //DEFINO LA ESTRUCTURA.
-
     private int id;
-    private String title ;
+    private String title;
     private String description;
     private boolean completed;
-    private LocalDate dueDate;
+    private LocalDateTime startDateTime;
+    private String duration;
 
-    // CONSTRUCTOR.
+    private static final DateTimeFormatter FULL_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
-    public Task (int id, String title, String description, LocalDate dueDate){
-            if(title == null || title.trim().isEmpty()){
-            throw new IllegalArgumentException("El Titulo no puede estar vacio");
-            }
-            this.id = id;
-            this.title = title;
-            this.description = description;
-            this.completed = completed;
-            this.dueDate = dueDate;
-
+    public Task(int id, String title, String description, LocalDateTime startDateTime) {
+        if (title == null || title.trim().isEmpty()) {
+            throw new IllegalArgumentException("El título no puede estar vacío");
         }
+        this.id = id;
+        this.title = title;
+        this.description = description;
+        this.startDateTime = startDateTime;
+        this.completed = false;
+    }
 
-    public int getId() {return id;}
-    public String getTitle() {return title;}
-    public void setDescription(String description) {this.description = description;}
-    public boolean isCompleted() {return completed;}
-    public void setDueDate(LocalDate dueDate) {this.dueDate = dueDate;}
-    public void setCompleted(boolean completed) {this.completed = completed;}
-    public LocalDate getDueDate() {return dueDate;}
+    public int getId() { return id; }
+
+    public String getTitle() { return title; }
+    public void setTitle(String title) {
+        if (title != null && !title.trim().isEmpty()) this.title = title;
+    }
+
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
+
+    public boolean isCompleted() { return completed; }
+    public void setCompleted(boolean completed) { this.completed = completed; }
+
+    public LocalDateTime getStartDateTime() { return startDateTime; }
+    public void setStartDateTime(LocalDateTime startDateTime) { this.startDateTime = startDateTime; }
+
+    public String getDuration() { return duration; }
+    public void setDuration(String duration) { this.duration = duration; }
+
+    public LocalDate getDueDate() {
+        return (startDateTime != null) ? startDateTime.toLocalDate() : null;
+    }
+
+    public boolean isDueToday() {
+        LocalDate date = getDueDate();
+        return date != null && date.equals(LocalDate.now());
+    }
 
     @Override
     public String toString() {
-        String estadoTexto = completed ? "COMPLETADA" : "PENDIENTE";
-        java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy");
-        String dateText = (dueDate != null) ? dueDate.format(formatter) : "Sin fecha";
-        return id + ". [" + estadoTexto + "] " + title + " (Vence: " + dateText + ")";
+        String estado = completed ? "✅" : "⏳";
+        String fechaHora = (startDateTime != null) ? startDateTime.format(FULL_FORMATTER) : "Sin fecha";
+        String duracionStr = (duration != null && !duration.isEmpty()) ? " - Duración: " + duration : "";
+
+        return String.format("%d. %s %s (%s)%s", id, estado, title, fechaHora, duracionStr);
     }
-
-    }
-
-
-
-
+}

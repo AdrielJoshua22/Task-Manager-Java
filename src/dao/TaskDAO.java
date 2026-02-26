@@ -2,78 +2,113 @@ package dao;
 
 import database.ConexionDB;
 import model.Task;
-
 import java.sql.*;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
 public class TaskDAO {
 
+    private static final String INSERT_SQL = "INSERT INTO tasks (titulo, descripcion, due_date, completada) VALUES (?, ?, ?, ?)";
+    private static final String SELECT_ALL_SQL = "SELECT * FROM tasks";
+    private static final String SELECT_BY_DATE_SQL = "SELECT * FROM tasks WHERE DATE(due_date) = ?";
+    private static final String UPDATE_COMPLETED_SQL = "UPDATE tasks SET completada = ? WHERE id = ?";
+    private static final String DELETE_SQL = "DELETE FROM tasks WHERE id = ?";
+
     public void guardarTarea(Task tarea) {
-        String sql = "INSERT INTO tasks (id, titulo, descripcion, due_date, completada) VALUES (?, ?, ?, ?, ?)";
-
         try (Connection con = ConexionDB.conectar();
-             PreparedStatement pstmt = con.prepareStatement(sql)) {
+             PreparedStatement pstmt = con.prepareStatement(INSERT_SQL)) {
 
-            pstmt.setInt(1, tarea.getId());
-            pstmt.setString(2, tarea.getTitle());
-            pstmt.setString(3, "Sin descripción");
+            pstmt.setString(1, tarea.getTitle());
+            pstmt.setString(2, tarea.getDescription());
 
-            // Convertimos LocalDate a java.sql.Date
-            if (tarea.getDueDate() != null) {
-                pstmt.setDate(4, Date.valueOf(tarea.getDueDate()));
+            if (tarea.getStartDateTime() != null) {
+                pstmt.setTimestamp(3, Timestamp.valueOf(tarea.getStartDateTime()));
             } else {
-                pstmt.setNull(4, java.sql.Types.DATE);
+                pstmt.setNull(3, Types.TIMESTAMP);
             }
 
-            pstmt.setBoolean(5, tarea.isCompleted());
-
+            pstmt.setBoolean(4, tarea.isCompleted());
             pstmt.executeUpdate();
-            System.out.println("Tarea '" + tarea.getTitle() + "' guardada con éxito.");
-
+            System.out.println(" Tarea '" + tarea.getTitle() + "' guardada con éxito.");
         } catch (SQLException e) {
-            System.out.println("Error al insertar en MySQL: " + e.getMessage());
+            logError("Error al guardar tarea", e);
         }
+    }
+
+    public List<Task> obtenerPorFecha(LocalDate fecha) {
+        List<Task> tareasDelDia = new ArrayList<>();
+        // Usamos DATE(due_date) para comparar solo la parte de la fecha en SQL
+        try (Connection con = ConexionDB.conectar();
+             PreparedStatement pstmt = con.prepareStatement(SELECT_BY_DATE_SQL)) {
+
+            pstmt.setDate(1, Date.valueOf(fecha));
+            ResultSet rs = pstmt.executeQuery();
+
+            while (rs.next()) {
+                tareasDelDia.add(mapResultSetToTask(rs));
+            }
+        } catch (SQLException e) {
+            logError("Error al filtrar por fecha", e);
+        }
+        return tareasDelDia;
     }
 
     public List<Task> obtenerTodas() {
         List<Task> lista = new ArrayList<>();
-        String sql = "SELECT * FROM tasks";
-
         try (Connection con = ConexionDB.conectar();
              Statement stmt = con.createStatement();
-             ResultSet rs = stmt.executeQuery(sql)) {
+             ResultSet rs = stmt.executeQuery(SELECT_ALL_SQL)) {
 
             while (rs.next()) {
-                int id = rs.getInt("id");
-                String titulo = rs.getString("titulo");
-                String desc = rs.getString("descripcion");
-                LocalDate fecha = (rs.getDate("due_date") != null) ? rs.getDate("due_date").toLocalDate() : null;
-                boolean completada = rs.getBoolean("completada");
-
-                Task t = new Task(id, titulo, desc, fecha);
-                t.setCompleted(completada);
-                lista.add(t);
+                lista.add(mapResultSetToTask(rs));
             }
         } catch (SQLException e) {
-            System.out.println("Error al leer de MySQL: " + e.getMessage());
+            logError("Error al leer todas las tareas", e);
         }
         return lista;
     }
 
-    public void marcarComoCompletada(int id) {
-        String sql = "UPDATE tasks SET completada = true WHERE id = ?";
-
+    public void cambiarEstadoCompletada(int id, boolean estado) {
         try (Connection con = ConexionDB.conectar();
-             PreparedStatement pstmt = con.prepareStatement(sql)) {
+             PreparedStatement pstmt = con.prepareStatement(UPDATE_COMPLETED_SQL)) {
 
+            pstmt.setBoolean(1, estado);
+            pstmt.setInt(2, id);
+            pstmt.executeUpdate();
+        } catch (SQLException e) {
+            logError("Error al actualizar estado", e);
+        }
+    }
+
+    public void eliminarTarea(int id) {
+        try (Connection con = ConexionDB.conectar();
+             PreparedStatement pstmt = con.prepareStatement(DELETE_SQL)) {
             pstmt.setInt(1, id);
             pstmt.executeUpdate();
-            System.out.println("Tarea #" + id + " marcada como completada en MySQL.");
-
+            System.out.println("🗑️ Tarea #" + id + " eliminada.");
         } catch (SQLException e) {
-            System.out.println("Error al actualizar tarea: " + e.getMessage());
+            logError("Error al eliminar tarea", e);
         }
+    }
+
+    private Task mapResultSetToTask(ResultSet rs) throws SQLException {
+        int id = rs.getInt("id");
+        String titulo = rs.getString("titulo");
+        String desc = rs.getString("descripcion");
+
+        Timestamp ts = rs.getTimestamp("due_date");
+        LocalDateTime fechaHora = (ts != null) ? ts.toLocalDateTime() : null;
+
+        boolean completada = rs.getBoolean("completada");
+
+        Task t = new Task(id, titulo, desc, fechaHora);
+        t.setCompleted(completada);
+        return t;
+    }
+
+    private void logError(String mensaje, Exception e) {
+        System.err.println("X " + mensaje + ": " + e.getMessage());
     }
 }

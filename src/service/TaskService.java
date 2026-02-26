@@ -2,7 +2,7 @@ package service;
 
 import dao.TaskDAO;
 import model.Task;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -11,13 +11,12 @@ public class TaskService {
 
     private final TaskDAO taskDAO;
 
-    // Constructor que recibe el DAO (Inyección de dependencias básica)
     public TaskService() {
         this.taskDAO = new TaskDAO();
     }
 
-    public void createTask(String title, String description, LocalDate dueDate) {
-        Task newTask = new Task(0, title, description, dueDate);
+    public void createTask(String title, String description, LocalDateTime startDateTime) {
+        Task newTask = new Task(0, title, description, startDateTime);
         taskDAO.guardarTarea(newTask);
     }
 
@@ -39,12 +38,12 @@ public class TaskService {
 
     public List<Task> getTasksOrderedByDate() {
         return getAllTasks().stream()
-                .filter(t -> t.getDueDate() != null)
-                .sorted(Comparator.comparing(Task::getDueDate))
+                .filter(t -> t.getStartDateTime() != null)
+                .sorted(Comparator.comparing(Task::getStartDateTime))
                 .collect(Collectors.toList());
     }
 
     public void markTaskAsCompleted(int id) {
-        taskDAO.marcarComoCompletada(id);
+        taskDAO.cambiarEstadoCompletada(id, true);
     }
 }

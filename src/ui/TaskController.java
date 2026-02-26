@@ -2,21 +2,25 @@ package ui;
 
 import dao.TaskDAO;
 import javafx.fxml.FXML;
-import javafx.scene.control.DatePicker;
-import javafx.scene.control.ListCell;
-import javafx.scene.control.ListView;
-import javafx.scene.control.TextField;
+import javafx.geometry.Pos;
+import javafx.scene.control.*;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
+import javafx.scene.paint.Color;
+import javafx.scene.shape.Circle;
 import model.Task;
-import service.TaskService;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
 
 public class TaskController {
-    TaskDAO gestor = new TaskDAO();
+    private final TaskDAO gestor = new TaskDAO();
+
     @FXML private TextField taskInputField;
     @FXML private DatePicker datePicker;
+    @FXML private DatePicker sideCalendar;
     @FXML private ListView<Task> taskListView;
-
-    private final TaskService taskService = new TaskService();;
 
     @FXML
     public void initialize() {
@@ -30,19 +34,30 @@ public class TaskController {
                     setText(null);
                     setGraphic(null);
                 } else {
-                    javafx.scene.shape.Circle indicator = new javafx.scene.shape.Circle(6);
+                    HBox container = new HBox(10);
+                    container.setAlignment(Pos.CENTER_LEFT);
 
-                    if (item.isCompleted()) {
-                        indicator.setFill(javafx.scene.paint.Color.LIMEGREEN);
-                    } else {
-                        indicator.setFill(javafx.scene.paint.Color.TOMATO);
-                    }
+                    Circle indicator = new Circle(6);
+                    indicator.setFill(item.isCompleted() ? Color.LIMEGREEN : Color.TOMATO);
 
-                    javafx.scene.layout.HBox container = new javafx.scene.layout.HBox(10);
-                    javafx.scene.control.Label nameLabel = new javafx.scene.control.Label(item.getId() + ". " + item.getTitle());
-                    nameLabel.setStyle("-fx-text-fill: white;");
+                    Label nameLabel = new Label(item.getTitle());
+                    nameLabel.setStyle("-fx-text-fill: white; -fx-font-weight: bold;");
 
-                    container.getChildren().addAll(indicator, nameLabel);
+                    String fechaStr = (item.getDueDate() != null) ? " [" + item.getDueDate() + "]" : "";
+                    Label dateLabel = new Label(fechaStr);
+                    dateLabel.setStyle("-fx-text-fill: #7f8c8d; -fx-font-size: 11px;");
+
+                    Region spacer = new Region();
+                    HBox.setHgrow(spacer, Priority.ALWAYS);
+
+                    Button btnEliminar = new Button("🗑");
+                    btnEliminar.setStyle("-fx-background-color: transparent; -fx-text-fill: #e74c3c; -fx-cursor: hand;");
+                    btnEliminar.setOnAction(e -> {
+                        gestor.eliminarTarea(item.getId());
+                        refrescarVistaActual();
+                    });
+
+                    container.getChildren().addAll(indicator, nameLabel, dateLabel, spacer, btnEliminar);
                     setGraphic(container);
                 }
             }
@@ -52,11 +67,38 @@ public class TaskController {
             if (event.getClickCount() == 2) {
                 Task seleccionada = taskListView.getSelectionModel().getSelectedItem();
                 if (seleccionada != null) {
-                    taskService.markTaskAsCompleted(seleccionada.getId());
-                    taskListView.refresh();
+                    gestor.cambiarEstadoCompletada(seleccionada.getId(), !seleccionada.isCompleted());
+                    refrescarVistaActual();
                 }
             }
         });
+
+        // Evento: Tecla Delete para borrar
+        taskListView.setOnKeyPressed(event -> {
+            Task seleccionada = taskListView.getSelectionModel().getSelectedItem();
+            if (seleccionada != null && (event.getCode().name().equals("DELETE") || event.getCode().name().equals("BACK_SPACE"))) {
+                gestor.eliminarTarea(seleccionada.getId());
+                refrescarVistaActual();
+            }
+        });
+    }
+
+    // Método de utilidad para no repetir lógica de refresco
+    private void refrescarVistaActual() {
+        if (sideCalendar.getValue() != null) {
+            handleCalendarSelection();
+        } else {
+            taskListView.getItems().setAll(gestor.obtenerTodas());
+        }
+    }
+
+    @FXML
+    private void handleCalendarSelection() {
+        LocalDate selectedDate = sideCalendar.getValue();
+        if (selectedDate != null) {
+            List<Task> tareasDelDia = gestor.obtenerPorFecha(selectedDate);
+            taskListView.getItems().setAll(tareasDelDia);
+        }
     }
 
     @FXML
@@ -64,33 +106,26 @@ public class TaskController {
         String title = taskInputField.getText();
         LocalDate date = datePicker.getValue();
 
-        if (title != null && !title.trim().isEmpty()) {
-            taskService.createTask(title, "Sin descripción", date);
-            Task tareaParaMySQL = new Task(0, title, "Sin descripción", date);
-            gestor.guardarTarea(tareaParaMySQL);
+        if (title != null && !title.trim().isEmpty() && date != null) {
+            LocalDateTime dateTime = date.atStartOfDay();
+            Task nuevaTarea = new Task(0, title, "Sin descripción", dateTime);
 
-            taskInputField.clear();
-            datePicker.setValue(null);
-            showAllTasks();
+            gestor.guardarTarea(nuevaTarea);
         }
     }
 
-    @FXML
-    public void showAllTasks() {
-        taskListView.getItems().setAll(taskService.getAllTasks());
+    @FXML public void showAllTasks() {
+        sideCalendar.setValue(null);
+        taskListView.getItems().setAll(gestor.obtenerTodas());
     }
 
-    @FXML
-    public void showPendingTasks() {
-        taskListView.getItems().setAll(taskService.getPendingTasks());
+    @FXML public void showPendingTasks() {
+        sideCalendar.setValue(null);
+        taskListView.getItems().setAll(gestor.obtenerTodas().stream().filter(t -> !t.isCompleted()).toList());
     }
 
-    @FXML
-    public void showCompletedTasks() {
-        taskListView.getItems().setAll(taskService.getCompletedTasks());
-    }
-
-    private void actualizarVistaSegunFiltro() {
-        taskListView.refresh();
+    @FXML public void showCompletedTasks() {
+        sideCalendar.setValue(null);
+        taskListView.getItems().setAll(gestor.obtenerTodas().stream().filter(Task::isCompleted).toList());
     }
 }
