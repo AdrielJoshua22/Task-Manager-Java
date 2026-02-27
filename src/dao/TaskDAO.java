@@ -39,7 +39,6 @@ public class TaskDAO {
 
     public List<Task> obtenerPorFecha(LocalDate fecha) {
         List<Task> tareasDelDia = new ArrayList<>();
-        // Usamos DATE(due_date) para comparar solo la parte de la fecha en SQL
         try (Connection con = ConexionDB.conectar();
              PreparedStatement pstmt = con.prepareStatement(SELECT_BY_DATE_SQL)) {
 
@@ -110,5 +109,33 @@ public class TaskDAO {
 
     private void logError(String mensaje, Exception e) {
         System.err.println("X " + mensaje + ": " + e.getMessage());
+    }
+
+    public void actualizarTarea(Task tarea) {
+        String sql = "UPDATE tasks SET titulo = ?, descripcion = ?, due_date = ?, completada = ? WHERE id = ?";
+
+        try (Connection con = ConexionDB.conectar();
+             PreparedStatement pstmt = con.prepareStatement(sql)) {
+
+            pstmt.setString(1, tarea.getTitle());
+            pstmt.setString(2, tarea.getDescription());
+
+            if (tarea.getStartDateTime() != null) {
+                pstmt.setTimestamp(3, java.sql.Timestamp.valueOf(tarea.getStartDateTime()));
+            } else {
+                pstmt.setNull(3, java.sql.Types.TIMESTAMP);
+            }
+
+            pstmt.setBoolean(4, tarea.isCompleted());
+            pstmt.setInt(5, tarea.getId());
+
+            int filasAfectadas = pstmt.executeUpdate();
+            if (filasAfectadas > 0) {
+                System.out.println("Tarea #" + tarea.getId() + " actualizada en la DB.");
+            }
+
+        } catch (SQLException e) {
+            System.err.println(" Error al actualizar tarea: " + e.getMessage());
+        }
     }
 }

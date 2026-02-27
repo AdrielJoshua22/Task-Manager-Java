@@ -3,40 +3,65 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <?import javafx.geometry.Insets?>
+<?import javafx.scene.text.Text?>
 
 <BorderPane xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
             fx:controller="ui.TaskController"
-            prefHeight="600.0" prefWidth="900.0"
+            prefHeight="600.0" prefWidth="950.0"
             style="-fx-background-color: #1e1e1e;">
 
     <left>
-        <VBox spacing="15" prefWidth="240" style="-fx-background-color: #252525; -fx-padding: 20;">
-            <Label text="TASK MANAGER" style="-fx-text-fill: #3498db; -fx-font-size: 18px; -fx-font-weight: bold;"/>
-            <Separator opacity="0.1"/>
+        <VBox spacing="10" prefWidth="250" style="-fx-background-color: #252525; -fx-padding: 20;">
+            <VBox spacing="5">
+                <Label text="TASK MANAGER" style="-fx-text-fill: #3498db; -fx-font-size: 20px; -fx-font-weight: bold;"/>
+                <Label text="Organiza tu día" style="-fx-text-fill: #7f8c8d; -fx-font-size: 11px;"/>
+            </VBox>
 
-            <Button text=" Todas las tareas" onAction="#showAllTasks" maxWidth="Infinity" style="-fx-background-color: transparent; -fx-text-fill: white;"/>
-            <Button text=" Pendientes" onAction="#showPendingTasks" maxWidth="Infinity" style="-fx-background-color: transparent; -fx-text-fill: white;"/>
-            <Button text=" Completadas" onAction="#showCompletedTasks" maxWidth="Infinity" style="-fx-background-color: transparent; -fx-text-fill: white;"/>
+            <Separator opacity="0.1" style="-fx-padding: 10 0 10 0;"/>
 
-            <Separator opacity="0.1"/>
-            <Label text="CALENDARIO" style="-fx-text-fill: #7f8c8d; -fx-font-size: 12px; -fx-font-weight: bold;"/>
+            <Button text="📅  Hoy" onAction="#showTodayTasks" maxWidth="Infinity"
+                    style="-fx-background-color: #3498db; -fx-text-fill: white; -fx-font-weight: bold; -fx-alignment: CENTER_LEFT; -fx-cursor: hand; -fx-background-radius: 5;"/>
 
+            <Label text="FILTROS" style="-fx-text-fill: #7f8c8d; -fx-font-size: 11px; -fx-font-weight: bold; -fx-padding: 15 0 5 0;"/>
+
+            <VBox spacing="5">
+                <Button text="📁  Todas las tareas" onAction="#showAllTasks" maxWidth="Infinity"
+                        style="-fx-background-color: transparent; -fx-text-fill: #bdc3c7; -fx-alignment: CENTER_LEFT; -fx-cursor: hand;"/>
+                <Button text="⏳  Pendientes" onAction="#showPendingTasks" maxWidth="Infinity"
+                        style="-fx-background-color: transparent; -fx-text-fill: #bdc3c7; -fx-alignment: CENTER_LEFT; -fx-cursor: hand;"/>
+                <Button text="✅  Completadas" onAction="#showCompletedTasks" maxWidth="Infinity"
+                        style="-fx-background-color: transparent; -fx-text-fill: #bdc3c7; -fx-alignment: CENTER_LEFT; -fx-cursor: hand;"/>
+            </VBox>
+
+            <Separator opacity="0.1" style="-fx-padding: 20 0 10 0;"/>
+
+            <Label text="CALENDARIO" style="-fx-text-fill: #7f8c8d; -fx-font-size: 11px; -fx-font-weight: bold; -fx-padding: 0 0 5 0;"/>
             <DatePicker fx:id="sideCalendar" onAction="#handleCalendarSelection"
-                        style="-fx-background-color: transparent;" />
+                        maxWidth="Infinity" promptText="Seleccionar fecha"
+                        style="-fx-background-color: #1e1e1e; -fx-control-inner-background: #1e1e1e;"/>
         </VBox>
     </left>
+
     <center>
         <VBox spacing="20" style="-fx-padding: 30;">
-            <HBox spacing="10" alignment="CENTER_LEFT">
-                <TextField fx:id="taskInputField" promptText="¿Qué hay que hacer?" HBox.hgrow="ALWAYS" />
-                <DatePicker fx:id="datePicker" promptText="Fecha" prefWidth="120"/>
+            <Label text="Panel de Control" style="-fx-text-fill: white; -fx-font-size: 24px; -fx-font-weight: bold;"/>
 
-                <TextField fx:id="timeInputField" promptText="HH:mm" prefWidth="60" />
+            <HBox spacing="12" alignment="CENTER_LEFT" style="-fx-background-color: #252525; -fx-padding: 15; -fx-background-radius: 10;">
+                <TextField fx:id="taskInputField" promptText="¿Qué hay que hacer hoy?" HBox.hgrow="ALWAYS"
+                           style="-fx-background-color: #333; -fx-text-fill: white; -fx-prompt-text-fill: #7f8c8d; -fx-border-color: #444; -fx-border-radius: 5;"/>
 
-                <Button text="Añadir" onAction="#handleAddTask" />
+                <DatePicker fx:id="datePicker" promptText="Fecha" prefWidth="130"
+                            style="-fx-control-inner-background: #333;"/>
+
+                <TextField fx:id="timeInputField" promptText="HH:mm" prefWidth="70"
+                           style="-fx-background-color: #333; -fx-text-fill: white; -fx-border-color: #444; -fx-border-radius: 5;"/>
+
+                <Button text="Añadir +" onAction="#handleAddTask" prefWidth="100"
+                        style="-fx-background-color: #2ecc71; -fx-text-fill: white; -fx-font-weight: bold; -fx-cursor: hand;"/>
             </HBox>
+
             <ListView fx:id="taskListView" VBox.vgrow="ALWAYS"
-                      style="-fx-background-color: #252525; -fx-control-inner-background: #252525; -fx-background-radius: 10;"/>
+                      style="-fx-background-color: transparent; -fx-control-inner-background: #252525; -fx-background-radius: 10; -fx-border-color: #333; -fx-border-radius: 10;"/>
         </VBox>
     </center>
 </BorderPane>

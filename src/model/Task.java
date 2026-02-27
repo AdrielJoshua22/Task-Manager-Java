@@ -11,26 +11,39 @@ public class Task {
     private String description;
     private boolean completed;
     private LocalDateTime startDateTime;
+    private LocalDateTime createdAt;
     private String duration;
 
     private static final DateTimeFormatter FULL_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
+    public Task(int id, String title, String description, LocalDateTime startDateTime, LocalDateTime createdAt) {
+        validarTitulo(title);
+        this.id = id;
+        this.title = title;
+        this.description = (description == null) ? "" : description;
+        this.startDateTime = startDateTime;
+        this.createdAt = (createdAt == null) ? LocalDateTime.now() : createdAt;
+        this.completed = false;
+    }
+
     public Task(int id, String title, String description, LocalDateTime startDateTime) {
+        this(id, title, description, startDateTime, LocalDateTime.now());
+    }
+
+    private void validarTitulo(String title) {
         if (title == null || title.trim().isEmpty()) {
             throw new IllegalArgumentException("El título no puede estar vacío");
         }
-        this.id = id;
-        this.title = title;
-        this.description = description;
-        this.startDateTime = startDateTime;
-        this.completed = false;
     }
+
+    // --- Getters y Setters ---
 
     public int getId() { return id; }
 
     public String getTitle() { return title; }
     public void setTitle(String title) {
-        if (title != null && !title.trim().isEmpty()) this.title = title;
+        validarTitulo(title);
+        this.title = title;
     }
 
     public String getDescription() { return description; }
@@ -41,6 +54,8 @@ public class Task {
 
     public LocalDateTime getStartDateTime() { return startDateTime; }
     public void setStartDateTime(LocalDateTime startDateTime) { this.startDateTime = startDateTime; }
+
+    public LocalDateTime getCreatedAt() { return createdAt; }
 
     public String getDuration() { return duration; }
     public void setDuration(String duration) { this.duration = duration; }
@@ -58,8 +73,6 @@ public class Task {
     public String toString() {
         String estado = completed ? "✅" : "⏳";
         String fechaHora = (startDateTime != null) ? startDateTime.format(FULL_FORMATTER) : "Sin fecha";
-        String duracionStr = (duration != null && !duration.isEmpty()) ? " - Duración: " + duration : "";
-
-        return String.format("%d. %s %s (%s)%s", id, estado, title, fechaHora, duracionStr);
+        return String.format("%d. %s %s (%s)", id, estado, title, fechaHora);
     }
 }
