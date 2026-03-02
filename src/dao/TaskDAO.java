@@ -100,10 +100,15 @@ public class TaskDAO {
         Timestamp ts = rs.getTimestamp("due_date");
         LocalDateTime fechaHora = (ts != null) ? ts.toLocalDateTime() : null;
 
+        Timestamp tsCreacion = rs.getTimestamp("created_at");
+        LocalDateTime fechaCreacion = (tsCreacion != null) ? tsCreacion.toLocalDateTime() : LocalDateTime.now();
+        // -------------------------------
+
         boolean completada = rs.getBoolean("completada");
 
-        Task t = new Task(id, titulo, desc, fechaHora);
+        Task t = new Task(id, titulo, desc, fechaHora, fechaCreacion);
         t.setCompleted(completada);
+
         return t;
     }
 
