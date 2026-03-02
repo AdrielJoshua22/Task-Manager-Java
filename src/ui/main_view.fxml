@@ -3,11 +3,11 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <?import javafx.geometry.Insets?>
-<?import javafx.scene.text.Text?>
 
-<BorderPane xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
+<BorderPane xmlns="http://javafx.com/javafx/17"
+            xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="ui.TaskController"
-            prefHeight="600.0" prefWidth="950.0"
+            prefHeight="600.0" prefWidth="1000.0"
             style="-fx-background-color: #1e1e1e;">
 
     <left>
@@ -46,15 +46,18 @@
         <VBox spacing="20" style="-fx-padding: 30;">
             <Label text="Panel de Control" style="-fx-text-fill: white; -fx-font-size: 24px; -fx-font-weight: bold;"/>
 
-            <HBox spacing="12" alignment="CENTER_LEFT" style="-fx-background-color: #252525; -fx-padding: 15; -fx-background-radius: 10;">
-                <TextField fx:id="taskInputField" promptText="¿Qué hay que hacer hoy?" HBox.hgrow="ALWAYS"
+            <HBox spacing="10" alignment="CENTER_LEFT" style="-fx-background-color: #252525; -fx-padding: 15; -fx-background-radius: 10;">
+                <TextField fx:id="taskInputField" promptText="¿Qué hay que hacer?" HBox.hgrow="ALWAYS"
                            style="-fx-background-color: #333; -fx-text-fill: white; -fx-prompt-text-fill: #7f8c8d; -fx-border-color: #444; -fx-border-radius: 5;"/>
 
-                <DatePicker fx:id="datePicker" promptText="Fecha" prefWidth="130"
+                <DatePicker fx:id="datePicker" promptText="Fecha" prefWidth="120"
                             style="-fx-control-inner-background: #333;"/>
 
-                <TextField fx:id="timeInputField" promptText="HH:mm" prefWidth="70"
+                <TextField fx:id="timeInputField" promptText="HH:mm" prefWidth="65"
                            style="-fx-background-color: #333; -fx-text-fill: white; -fx-border-color: #444; -fx-border-radius: 5;"/>
+
+                <ComboBox fx:id="repeatComboBox" promptText="Repetir" prefWidth="130"
+                          style="-fx-background-color: #333; -fx-text-fill: white; -fx-border-color: #444; -fx-border-radius: 5;"/>
 
                 <Button text="Añadir +" onAction="#handleAddTask" prefWidth="100"
                         style="-fx-background-color: #2ecc71; -fx-text-fill: white; -fx-font-weight: bold; -fx-cursor: hand;"/>

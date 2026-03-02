@@ -8,6 +8,7 @@ import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import model.Task;
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -24,11 +25,14 @@ public class TaskController {
     @FXML private TextField taskInputField, timeInputField;
     @FXML private DatePicker datePicker, sideCalendar;
     @FXML private ListView<Task> taskListView;
+    @FXML private ComboBox<String> repeatComboBox;
 
     @FXML
     public void initialize() {
+        // Inicialización de la vista
         showTodayTasks();
 
+        // Configuración de celdas personalizadas
         taskListView.setCellFactory(lv -> new ListCell<>() {
             @Override
             protected void updateItem(Task item, boolean empty) {
@@ -41,32 +45,21 @@ public class TaskController {
             }
         });
 
+        // Opciones de recurrencia
+        if (repeatComboBox != null) {
+            repeatComboBox.getItems().setAll("Una vez", "Semanal (1 mes)", "Semanal (2 meses)");
+            repeatComboBox.setValue("Una vez");
+        }
+
         configurarEventos();
     }
 
     // --- LÓGICA DE VISTA (FILTROS) ---
 
-    @FXML
-    public void showTodayTasks() {
-        updateTaskListView(Task::isDueToday);
-        sideCalendar.setValue(null);
-    }
-
-    @FXML
-    public void showAllTasks() {
-        updateTaskListView(t -> true);
-        sideCalendar.setValue(null);
-    }
-
-    @FXML
-    public void showPendingTasks() {
-        updateTaskListView(t -> !t.isCompleted());
-    }
-
-    @FXML
-    public void showCompletedTasks() {
-        updateTaskListView(Task::isCompleted);
-    }
+    @FXML public void showTodayTasks() { updateTaskListView(Task::isDueToday); sideCalendar.setValue(null); }
+    @FXML public void showAllTasks() { updateTaskListView(t -> true); sideCalendar.setValue(null); }
+    @FXML public void showPendingTasks() { updateTaskListView(t -> !t.isCompleted()); }
+    @FXML public void showCompletedTasks() { updateTaskListView(Task::isCompleted); }
 
     @FXML
     private void handleCalendarSelection() {
@@ -88,21 +81,33 @@ public class TaskController {
         String title = taskInputField.getText();
         LocalDate date = datePicker.getValue();
         String rawTime = timeInputField.getText();
+        String repeatOption = (repeatComboBox != null) ? repeatComboBox.getValue() : "Una vez";
 
         if (esEntradaInvalida(title, date)) return;
 
         try {
             LocalTime time = rawTime.isBlank() ? LocalTime.MIN : LocalTime.parse(rawTime, timeFormatter);
-            Task nueva = new Task(0, title, "", LocalDateTime.of(date, time));
+            LocalDateTime baseDateTime = LocalDateTime.of(date, time);
 
-            gestor.guardarTarea(nueva);
+            int repeticiones = 1;
+            if (repeatOption.contains("1 mes")) repeticiones = 4;
+            else if (repeatOption.contains("2 meses")) repeticiones = 8;
+
+            // Bucle para crear las tareas recurrentes
+            for (int i = 0; i < repeticiones; i++) {
+                LocalDateTime fechaIterada = baseDateTime.plusWeeks(i);
+                // Usamos el constructor que deja que la DB asigne el ID y el CreatedAt
+                Task nueva = new Task(0, title, "", fechaIterada);
+                gestor.guardarTarea(nueva);
+            }
+
             limpiarInputs();
             refrescarVistaActual();
+
         } catch (DateTimeParseException e) {
-            mostrarAlerta("Formato de hora incorrecto", "Usa HH:mm (ej: 14:30)");
+            mostrarAlerta("Error", "Formato de hora incorrecto (HH:mm).");
         }
     }
-
     private void mostrarDetalleTarea(Task task) {
         Dialog<ButtonType> dialog = new Dialog<>();
         dialog.setTitle("Detalle: " + task.getTitle());
@@ -119,23 +124,49 @@ public class TaskController {
         txtObs.setPromptText("Añadir observaciones...");
         txtObs.setStyle("-fx-control-inner-background: #1e1e1e; -fx-text-fill: white;");
 
-        root.getChildren().addAll(lblCreada, lblMeta, new Separator(), new Label("Notas:"), txtObs);
+        // --- NUEVO: ComboBox de Repetición en el Detalle ---
+        Label lblRepeat = new Label("Programar repeticiones futuras:");
+        lblRepeat.setStyle("-fx-text-fill: white; -fx-font-size: 11px;");
+        ComboBox<String> detailRepeatCombo = new ComboBox<>();
+        detailRepeatCombo.getItems().addAll("No repetir", "Semanal (Próximo mes)", "Semanal (Próximos 2 meses)");
+        detailRepeatCombo.setValue("No repetir");
+        detailRepeatCombo.setMaxWidth(Double.MAX_VALUE);
+        detailRepeatCombo.setStyle("-fx-background-color: #333; -fx-text-fill: white;");
+
+        root.getChildren().addAll(lblCreada, lblMeta, new Separator(), new Label("Notas:"), txtObs, new Separator(), lblRepeat, detailRepeatCombo);
         dialog.getDialogPane().setContent(root);
 
-
+        // Botones del diálogo
         ButtonType btnSave = new ButtonType("Guardar", ButtonBar.ButtonData.OK_DONE);
         ButtonType btnStatus = new ButtonType(task.isCompleted() ? "Reabrir" : "Completar", ButtonBar.ButtonData.LEFT);
         ButtonType btnDel = new ButtonType("Eliminar", ButtonBar.ButtonData.OTHER);
         dialog.getDialogPane().getButtonTypes().addAll(btnSave, btnStatus, btnDel, ButtonType.CANCEL);
 
+        // Estilo oscuro para los botones (opcional pero recomendado)
+        dialog.getDialogPane().setStyle("-fx-background-color: #2b2b2b;");
+        dialog.getDialogPane().lookupAll(".label").forEach(n -> n.setStyle("-fx-text-fill: white;"));
+
         dialog.showAndWait().ifPresent(res -> {
             if (res == btnSave) {
+                // 1. Actualizamos la tarea actual (observaciones)
                 task.setDescription(txtObs.getText());
                 gestor.actualizarTarea(task);
+
+                // 2. Lógica de repetición desde el detalle
+                String option = detailRepeatCombo.getValue();
+                if (!option.equals("No repetir")) {
+                    int semanas = option.contains("1 mes") ? 4 : 8;
+                    // Empezamos desde i = 1 porque la tarea actual (i=0) ya existe
+                    for (int i = 1; i < semanas; i++) {
+                        LocalDateTime nuevaFecha = task.getStartDateTime().plusWeeks(i);
+                        Task copia = new Task(0, task.getTitle(), task.getDescription(), nuevaFecha);
+                        gestor.guardarTarea(copia);
+                    }
+                }
             } else if (res == btnStatus) {
                 gestor.cambiarEstadoCompletada(task.getId(), !task.isCompleted());
             } else if (res == btnDel) {
-                gestor.eliminarTarea(task.getId());
+                confirmarEliminacion(task);
             }
             refrescarVistaActual();
         });
@@ -149,22 +180,38 @@ public class TaskController {
 
         Circle dot = new Circle(5, item.isCompleted() ? Color.LIMEGREEN : Color.TOMATO);
         Label title = new Label(item.getTitle());
-        title.setStyle("-fx-text-fill: white; -fx-font-weight: bold;");
+        title.setStyle(item.isCompleted() ? "-fx-text-fill: #7f8c8d; -fx-strikethrough: true;" : "-fx-text-fill: white; -fx-font-weight: bold;");
 
-        Label info = new Label(String.format("[%s] %s",
-                item.getStartDateTime().format(timeFormatter),
-                item.getDueDate()));
+        Label info = new Label(String.format("[%s] %s", item.getStartDateTime().format(timeFormatter), item.getDueDate()));
         info.setStyle("-fx-text-fill: #7f8c8d; -fx-font-size: 10px;");
 
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
         Button btnDel = new Button("🗑");
-        btnDel.setStyle("-fx-background-color: transparent; -fx-text-fill: #e74c3c;");
-        btnDel.setOnAction(e -> { gestor.eliminarTarea(item.getId()); refrescarVistaActual(); });
+        btnDel.setStyle("-fx-background-color: transparent; -fx-text-fill: #e74c3c; -fx-cursor: hand;");
+        btnDel.setOnAction(e -> confirmarEliminacion(item));
 
         row.getChildren().addAll(dot, title, info, spacer, btnDel);
         return row;
+    }
+
+    private void confirmarEliminacion(Task item) {
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Confirmar eliminación");
+        alert.setHeaderText(null);
+        alert.setContentText("¿Borrar tarea: \"" + item.getTitle() + "\"?");
+
+        DialogPane dp = alert.getDialogPane();
+        dp.setStyle("-fx-background-color: #2b2b2b;");
+        dp.lookupAll(".label").forEach(n -> n.setStyle("-fx-text-fill: white;"));
+
+        alert.showAndWait().ifPresent(response -> {
+            if (response == ButtonType.OK) {
+                gestor.eliminarTarea(item.getId());
+                refrescarVistaActual();
+            }
+        });
     }
 
     // --- UTILIDADES ---
@@ -195,6 +242,7 @@ public class TaskController {
         taskInputField.clear();
         timeInputField.clear();
         datePicker.setValue(null);
+        repeatComboBox.setValue("Una vez");
     }
 
     private void mostrarAlerta(String tit, String msg) {
