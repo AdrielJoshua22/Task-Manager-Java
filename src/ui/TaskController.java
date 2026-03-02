@@ -93,10 +93,9 @@ public class TaskController {
             if (repeatOption.contains("1 mes")) repeticiones = 4;
             else if (repeatOption.contains("2 meses")) repeticiones = 8;
 
-            // Bucle para crear las tareas recurrentes
+
             for (int i = 0; i < repeticiones; i++) {
                 LocalDateTime fechaIterada = baseDateTime.plusWeeks(i);
-                // Usamos el constructor que deja que la DB asigne el ID y el CreatedAt
                 Task nueva = new Task(0, title, "", fechaIterada);
                 gestor.guardarTarea(nueva);
             }
@@ -124,7 +123,6 @@ public class TaskController {
         txtObs.setPromptText("Añadir observaciones...");
         txtObs.setStyle("-fx-control-inner-background: #1e1e1e; -fx-text-fill: white;");
 
-        // --- NUEVO: ComboBox de Repetición en el Detalle ---
         Label lblRepeat = new Label("Programar repeticiones futuras:");
         lblRepeat.setStyle("-fx-text-fill: white; -fx-font-size: 11px;");
         ComboBox<String> detailRepeatCombo = new ComboBox<>();
@@ -136,27 +134,24 @@ public class TaskController {
         root.getChildren().addAll(lblCreada, lblMeta, new Separator(), new Label("Notas:"), txtObs, new Separator(), lblRepeat, detailRepeatCombo);
         dialog.getDialogPane().setContent(root);
 
-        // Botones del diálogo
         ButtonType btnSave = new ButtonType("Guardar", ButtonBar.ButtonData.OK_DONE);
         ButtonType btnStatus = new ButtonType(task.isCompleted() ? "Reabrir" : "Completar", ButtonBar.ButtonData.LEFT);
         ButtonType btnDel = new ButtonType("Eliminar", ButtonBar.ButtonData.OTHER);
         dialog.getDialogPane().getButtonTypes().addAll(btnSave, btnStatus, btnDel, ButtonType.CANCEL);
 
-        // Estilo oscuro para los botones (opcional pero recomendado)
+
         dialog.getDialogPane().setStyle("-fx-background-color: #2b2b2b;");
         dialog.getDialogPane().lookupAll(".label").forEach(n -> n.setStyle("-fx-text-fill: white;"));
 
         dialog.showAndWait().ifPresent(res -> {
             if (res == btnSave) {
-                // 1. Actualizamos la tarea actual (observaciones)
                 task.setDescription(txtObs.getText());
                 gestor.actualizarTarea(task);
 
-                // 2. Lógica de repetición desde el detalle
+
                 String option = detailRepeatCombo.getValue();
                 if (!option.equals("No repetir")) {
                     int semanas = option.contains("1 mes") ? 4 : 8;
-                    // Empezamos desde i = 1 porque la tarea actual (i=0) ya existe
                     for (int i = 1; i < semanas; i++) {
                         LocalDateTime nuevaFecha = task.getStartDateTime().plusWeeks(i);
                         Task copia = new Task(0, task.getTitle(), task.getDescription(), nuevaFecha);
