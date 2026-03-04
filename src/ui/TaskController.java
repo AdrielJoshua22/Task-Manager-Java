@@ -31,7 +31,7 @@ public class TaskController {
     public void initialize() {
         // Inicialización de la vista
         showTodayTasks();
-
+        datePicker.setValue(LocalDate.now());
         // Configuración de celdas personalizadas
         taskListView.setCellFactory(lv -> new ListCell<>() {
             @Override
